@@ -26,6 +26,7 @@ import (
 
 const nodeName1 = "ip-10-11-12-13.ec2.internal"
 const nodeName2 = "ip-10-11-12-14.ec2.internal"
+const nodeName3 = "ip-10-11-12-15.ec2.internal"
 
 func init() {
 	hclog.DefaultOptions.Level = hclog.Debug
@@ -763,7 +764,7 @@ func TestServiceResource_lbRegisterEndpoints(t *testing.T) {
 	closer := controller.TestControllerRun(&serviceResource)
 	defer closer()
 
-	node1, _ := createNodes(t, client)
+	node1, _, _ := createNodes(t, client)
 
 	// Insert the endpoint slice
 	_, err := client.DiscoveryV1().EndpointSlices(metav1.NamespaceDefault).Create(
@@ -845,7 +846,7 @@ func TestServiceResource_nodePort(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.2.3.4", actual[0].Service.Address)
 		require.Equal(r, 30000, actual[0].Service.Port)
@@ -856,7 +857,13 @@ func TestServiceResource_nodePort(t *testing.T) {
 		require.Equal(r, "k8s-sync", actual[1].Node)
 		require.Equal(r, "us-west-2a", actual[0].Service.Meta[ConsulK8STopologyZone])
 		require.Equal(r, "us-west-2b", actual[1].Service.Meta[ConsulK8STopologyZone])
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.4.5.6", actual[2].Service.Address)
+		require.Equal(r, 30000, actual[2].Service.Port)
+		require.Equal(r, "k8s-sync", actual[2].Node)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -887,7 +894,7 @@ func TestServiceResource_nodePortPrefix(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "prefixfoo", actual[0].Service.Service)
 		require.Equal(r, "1.2.3.4", actual[0].Service.Address)
 		require.Equal(r, 30000, actual[0].Service.Port)
@@ -896,7 +903,13 @@ func TestServiceResource_nodePortPrefix(t *testing.T) {
 		require.Equal(r, "2.3.4.5", actual[1].Service.Address)
 		require.Equal(r, 30000, actual[1].Service.Port)
 		require.Equal(r, "k8s-sync", actual[1].Node)
+		require.Equal(r, "prefixfoo", actual[2].Service.Service)
+		require.Equal(r, "3.4.5.6", actual[2].Service.Address)
+		require.Equal(r, 30000, actual[2].Service.Port)
+		require.Equal(r, "k8s-sync", actual[2].Node)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -913,7 +926,7 @@ func TestServiceResource_nodePort_singleEndpoint(t *testing.T) {
 	closer := controller.TestControllerRun(&serviceResource)
 	defer closer()
 
-	node1, _ := createNodes(t, client)
+	node1, _, _ := createNodes(t, client)
 
 	// Insert the endpoint slice
 	_, err := client.DiscoveryV1().EndpointSlices(metav1.NamespaceDefault).Create(
@@ -996,7 +1009,7 @@ func TestServiceResource_nodePortAnnotatedPort(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.2.3.4", actual[0].Service.Address)
 		require.Equal(r, 30001, actual[0].Service.Port)
@@ -1005,7 +1018,13 @@ func TestServiceResource_nodePortAnnotatedPort(t *testing.T) {
 		require.Equal(r, "2.3.4.5", actual[1].Service.Address)
 		require.Equal(r, 30001, actual[1].Service.Port)
 		require.Equal(r, "k8s-sync", actual[1].Node)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.4.5.6", actual[2].Service.Address)
+		require.Equal(r, 30001, actual[2].Service.Port)
+		require.Equal(r, "k8s-sync", actual[2].Node)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1040,7 +1059,7 @@ func TestServiceResource_nodePortUnnamedPort(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.2.3.4", actual[0].Service.Address)
 		require.Equal(r, 30000, actual[0].Service.Port)
@@ -1049,7 +1068,13 @@ func TestServiceResource_nodePortUnnamedPort(t *testing.T) {
 		require.Equal(r, "2.3.4.5", actual[1].Service.Address)
 		require.Equal(r, 30000, actual[1].Service.Port)
 		require.Equal(r, "k8s-sync", actual[1].Node)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.4.5.6", actual[2].Service.Address)
+		require.Equal(r, 30000, actual[2].Service.Port)
+		require.Equal(r, "k8s-sync", actual[2].Node)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1080,16 +1105,22 @@ func TestServiceResource_nodePort_internalOnlySync(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "4.5.6.7", actual[0].Service.Address)
 		require.Equal(r, 30000, actual[0].Service.Port)
 		require.Equal(r, "k8s-sync", actual[0].Node)
 		require.Equal(r, "foo", actual[1].Service.Service)
-		require.Equal(r, "3.4.5.6", actual[1].Service.Address)
+		require.Equal(r, "5.6.7.8", actual[1].Service.Address)
 		require.Equal(r, 30000, actual[1].Service.Port)
 		require.Equal(r, "k8s-sync", actual[1].Node)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "6.7.8.9", actual[2].Service.Address)
+		require.Equal(r, 30000, actual[2].Service.Port)
+		require.Equal(r, "k8s-sync", actual[2].Node)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1106,7 +1137,7 @@ func TestServiceResource_nodePort_externalFirstSync(t *testing.T) {
 	closer := controller.TestControllerRun(&serviceResource)
 	defer closer()
 
-	node1, _ := createNodes(t, client)
+	node1, _, _ := createNodes(t, client)
 
 	node1.Status = corev1.NodeStatus{
 		Addresses: []corev1.NodeAddress{
@@ -1128,7 +1159,7 @@ func TestServiceResource_nodePort_externalFirstSync(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "4.5.6.7", actual[0].Service.Address)
 		require.Equal(r, 30000, actual[0].Service.Port)
@@ -1137,7 +1168,13 @@ func TestServiceResource_nodePort_externalFirstSync(t *testing.T) {
 		require.Equal(r, "2.3.4.5", actual[1].Service.Address)
 		require.Equal(r, 30000, actual[1].Service.Port)
 		require.Equal(r, "k8s-sync", actual[1].Node)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.4.5.6", actual[2].Service.Address)
+		require.Equal(r, 30000, actual[2].Service.Port)
+		require.Equal(r, "k8s-sync", actual[2].Node)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1168,16 +1205,22 @@ func TestServiceResource_clusterIP(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.1.1.1", actual[0].Service.Address)
 		require.Equal(r, 8080, actual[0].Service.Port)
+		require.Equal(r, "us-west-2a", actual[0].Service.Meta["external-k8s-topology-zone"])
 		require.Equal(r, "foo", actual[1].Service.Service)
 		require.Equal(r, "2.2.2.2", actual[1].Service.Address)
 		require.Equal(r, 8080, actual[1].Service.Port)
-		require.Equal(r, "us-west-2a", actual[0].Service.Meta["external-k8s-topology-zone"])
 		require.Equal(r, "us-west-2b", actual[1].Service.Meta["external-k8s-topology-zone"])
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.3.3.3", actual[2].Service.Address)
+		require.Equal(r, 8080, actual[2].Service.Port)
+		require.Equal(r, "us-west-2c", actual[2].Service.Meta["external-k8s-topology-zone"])
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1208,15 +1251,19 @@ func TestServiceResource_clusterIP_healthCheck(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, consulKubernetesCheckName, actual[0].Check.Name)
 		require.Equal(r, consulapi.HealthPassing, actual[0].Check.Status)
 		require.Equal(r, kubernetesSuccessReasonMsg, actual[0].Check.Output)
 		require.Equal(r, consulKubernetesCheckType, actual[0].Check.Type)
 		require.Equal(r, consulKubernetesCheckName, actual[1].Check.Name)
-		require.Equal(r, consulapi.HealthPassing, actual[1].Check.Status)
-		require.Equal(r, kubernetesSuccessReasonMsg, actual[1].Check.Output)
+		require.Equal(r, consulapi.HealthCritical, actual[1].Check.Status)
+		require.Equal(r, kubernetesFailureReasonMsg, actual[1].Check.Output)
 		require.Equal(r, consulKubernetesCheckType, actual[1].Check.Type)
+		require.Equal(r, consulKubernetesCheckName, actual[2].Check.Name)
+		require.Equal(r, consulapi.HealthCritical, actual[2].Check.Status)
+		require.Equal(r, kubernetesFailureReasonMsg, actual[2].Check.Output)
+		require.Equal(r, consulKubernetesCheckType, actual[2].Check.Type)
 	})
 }
 
@@ -1248,14 +1295,19 @@ func TestServiceResource_clusterIPPrefix(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "prefixfoo", actual[0].Service.Service)
 		require.Equal(r, "1.1.1.1", actual[0].Service.Address)
 		require.Equal(r, 8080, actual[0].Service.Port)
 		require.Equal(r, "prefixfoo", actual[1].Service.Service)
 		require.Equal(r, "2.2.2.2", actual[1].Service.Address)
 		require.Equal(r, 8080, actual[1].Service.Port)
+		require.Equal(r, "prefixfoo", actual[2].Service.Service)
+		require.Equal(r, "3.3.3.3", actual[2].Service.Address)
+		require.Equal(r, 8080, actual[2].Service.Port)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1288,14 +1340,19 @@ func TestServiceResource_clusterIPAnnotatedPortName(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.1.1.1", actual[0].Service.Address)
 		require.Equal(r, 2000, actual[0].Service.Port)
 		require.Equal(r, "foo", actual[1].Service.Service)
 		require.Equal(r, "2.2.2.2", actual[1].Service.Address)
 		require.Equal(r, 2000, actual[1].Service.Port)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.3.3.3", actual[2].Service.Address)
+		require.Equal(r, 2000, actual[2].Service.Port)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1328,14 +1385,19 @@ func TestServiceResource_clusterIPAnnotatedPortNumber(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.1.1.1", actual[0].Service.Address)
 		require.Equal(r, 4141, actual[0].Service.Port)
 		require.Equal(r, "foo", actual[1].Service.Service)
 		require.Equal(r, "2.2.2.2", actual[1].Service.Address)
 		require.Equal(r, 4141, actual[1].Service.Port)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.3.3.3", actual[2].Service.Address)
+		require.Equal(r, 4141, actual[2].Service.Port)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1370,14 +1432,19 @@ func TestServiceResource_clusterIPUnnamedPorts(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.1.1.1", actual[0].Service.Address)
 		require.Equal(r, 8080, actual[0].Service.Port)
 		require.Equal(r, "foo", actual[1].Service.Service)
 		require.Equal(r, "2.2.2.2", actual[1].Service.Address)
 		require.Equal(r, 8080, actual[1].Service.Port)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.3.3.3", actual[2].Service.Address)
+		require.Equal(r, 8080, actual[2].Service.Port)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1441,14 +1508,19 @@ func TestServiceResource_clusterIPAllNamespaces(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.1.1.1", actual[0].Service.Address)
 		require.Equal(r, 8080, actual[0].Service.Port)
 		require.Equal(r, "foo", actual[1].Service.Service)
 		require.Equal(r, "2.2.2.2", actual[1].Service.Address)
 		require.Equal(r, 8080, actual[1].Service.Port)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.3.3.3", actual[2].Service.Address)
+		require.Equal(r, 8080, actual[2].Service.Port)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1484,14 +1556,19 @@ func TestServiceResource_clusterIPTargetPortNamed(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foo", actual[0].Service.Service)
 		require.Equal(r, "1.1.1.1", actual[0].Service.Address)
 		require.Equal(r, 2000, actual[0].Service.Port)
 		require.Equal(r, "foo", actual[1].Service.Service)
 		require.Equal(r, "2.2.2.2", actual[1].Service.Address)
 		require.Equal(r, 2000, actual[1].Service.Port)
+		require.Equal(r, "foo", actual[2].Service.Service)
+		require.Equal(r, "3.3.3.3", actual[2].Service.Address)
+		require.Equal(r, 2000, actual[2].Service.Port)
 		require.NotEqual(r, actual[0].Service.ID, actual[1].Service.ID)
+		require.NotEqual(r, actual[0].Service.ID, actual[2].Service.ID)
+		require.NotEqual(r, actual[1].Service.ID, actual[2].Service.ID)
 	})
 }
 
@@ -1522,7 +1599,7 @@ func TestServiceResource_targetRefInMeta(t *testing.T) {
 		syncer.Lock()
 		defer syncer.Unlock()
 		actual := syncer.Registrations
-		require.Len(r, actual, 2)
+		require.Len(r, actual, 3)
 		require.Equal(r, "foobar", actual[0].Service.Meta[ConsulK8SRefValue])
 		require.Equal(r, "pod", actual[0].Service.Meta[ConsulK8SRefKind])
 		require.Equal(r, nodeName1, actual[0].Service.Meta[ConsulK8SNodeName])
@@ -2015,7 +2092,7 @@ func TestServiceResource_addIngress(t *testing.T) {
 					require.Equal(r, test.expectedAddress, actual[0].Service.Address)
 					require.Equal(r, test.expectedPort, actual[0].Service.Port)
 				} else {
-					require.Len(r, actual, 2)
+					require.Len(r, actual, 3)
 					require.Equal(r, test.expectedAddress, actual[0].Service.Address)
 					require.Equal(r, test.expectedPort, actual[0].Service.Port)
 				}
@@ -2087,8 +2164,8 @@ func clusterIPService(name, namespace string) *corev1.Service {
 	}
 }
 
-// createNodes calls the fake k8s client to create two Kubernetes nodes and returns them.
-func createNodes(t *testing.T, client *fake.Clientset) (*corev1.Node, *corev1.Node) {
+// createNodes calls the fake k8s client to create three Kubernetes nodes and returns them.
+func createNodes(t *testing.T, client *fake.Clientset) (*corev1.Node, *corev1.Node, *corev1.Node) {
 	// Insert the nodes
 	node1 := &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
@@ -2114,21 +2191,37 @@ func createNodes(t *testing.T, client *fake.Clientset) (*corev1.Node, *corev1.No
 		Status: corev1.NodeStatus{
 			Addresses: []corev1.NodeAddress{
 				{Type: corev1.NodeExternalIP, Address: "2.3.4.5"},
-				{Type: corev1.NodeInternalIP, Address: "3.4.5.6"},
-				{Type: corev1.NodeInternalIP, Address: "6.7.8.9"},
+				{Type: corev1.NodeInternalIP, Address: "5.6.7.8"},
+				{Type: corev1.NodeInternalIP, Address: "8.9.10.11"},
 			},
 		},
 	}
 	_, err = client.CoreV1().Nodes().Create(context.Background(), node2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	return node1, node2
+	node3 := &corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nodeName3,
+		},
+
+		Status: corev1.NodeStatus{
+			Addresses: []corev1.NodeAddress{
+				{Type: corev1.NodeExternalIP, Address: "3.4.5.6"},
+				{Type: corev1.NodeInternalIP, Address: "6.7.8.9"},
+				{Type: corev1.NodeInternalIP, Address: "9.10.11.12"},
+			},
+		},
+	}
+	_, err = client.CoreV1().Nodes().Create(context.Background(), node3, metav1.CreateOptions{})
+	require.NoError(t, err)
+	return node1, node2, node3
 }
 
-// createEndpointSlices calls the fake k8s client to create an endpoint slices with two endpoints on different nodes.
+// createEndpointSlices calls the fake k8s client to create an endpoint slices with three endpoints on different nodes.
 func createEndpointSlice(t *testing.T, client *fake.Clientset, serviceName string, namespace string) {
 	node1 := nodeName1
 	node2 := nodeName2
+	node3 := nodeName3
 	targetRef := corev1.ObjectReference{Kind: "pod", Name: "foobar"}
 
 	_, err := client.DiscoveryV1().EndpointSlices(namespace).Create(
@@ -2154,12 +2247,22 @@ func createEndpointSlice(t *testing.T, client *fake.Clientset, serviceName strin
 				{
 					Addresses: []string{"2.2.2.2"},
 					Conditions: discoveryv1.EndpointConditions{
-						Ready:       ptr.To(true),
+						Ready:       nil,
 						Serving:     ptr.To(true),
 						Terminating: ptr.To(false),
 					},
 					NodeName: &node2,
 					Zone:     ptr.To("us-west-2b"),
+				},
+				{
+					Addresses: []string{"3.3.3.3"},
+					Conditions: discoveryv1.EndpointConditions{
+						Ready:       ptr.To(false),
+						Serving:     ptr.To(false),
+						Terminating: ptr.To(true),
+					},
+					NodeName: &node3,
+					Zone:     ptr.To("us-west-2c"),
 				},
 			},
 			Ports: []discoveryv1.EndpointPort{
